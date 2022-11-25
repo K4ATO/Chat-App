@@ -17,15 +17,24 @@ app.use(express.static(publicDirectoryPath));
 // using on connection event from socketio
 io.on('connection', (socket) => {
     console.log('New WebSocket connection');
+    // emitting Welcome! message for every user
     socket.emit('message', 'Welcome!');
-
+    // every user joins the chat, A new user has joined! displayed, but not for the user who joined
     socket.broadcast.emit('message', 'A new user has joined!');
-
+    // emitting every message for all users
     socket.on('sendMessage', (message) => {
         io.emit('message', message);
     });
+    // every user leaves the chat, A user has left!
     socket.on('disconnect', () => {
         io.emit('message', 'A user has left!');
+    });
+    // every user shares his location
+    socket.on('shareLocation', (userLocation) => {
+        io.emit(
+            'message',
+            `https://google.com/maps?q=${userLocation.latitude},${userLocation.longitude}`
+        );
     });
 });
 

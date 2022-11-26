@@ -3,6 +3,7 @@ const path = require('path');
 const socketio = require('socket.io');
 const http = require('http');
 const Filter = require('bad-words');
+const { generateMessage } = require('./utils/messages');
 
 const app = express();
 // creating server with http to pass it for socketio function
@@ -20,10 +21,10 @@ io.on('connection', (socket) => {
     console.log('New WebSocket connection');
 
     // emitting Welcome! message for every user
-    socket.emit('message', 'Welcome!');
+    socket.emit('message', generateMessage('Welcome!'));
 
     // every user joins the chat, A new user has joined! displayed, but not for the user who joined
-    socket.broadcast.emit('message', 'A new user has joined!');
+    socket.broadcast.emit('message', generateMessage('A new user has joined!'));
 
     // emitting every message for all users
     socket.on('sendMessage', (message, cb) => {
@@ -31,13 +32,13 @@ io.on('connection', (socket) => {
         if (filter.isProfane(message)) {
             return cb('profanity is not allowed!');
         }
-        io.emit('message', message);
+        io.emit('message', generateMessage(message));
         cb();
     });
 
     // every user leaves the chat, A user has left!
     socket.on('disconnect', () => {
-        io.emit('message', 'A user has left!');
+        io.emit('message', generateMessage('A user has left!'));
     });
 
     // every user shares his location

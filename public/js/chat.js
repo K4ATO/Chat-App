@@ -13,6 +13,11 @@ const locationMessageTemplate = document.querySelector(
     '#location-message-template'
 ).innerHTML;
 
+// Options
+const { username, room } = Qs.parse(location.search, {
+    ignoreQueryPrefix: true,
+});
+
 // event listener for receiving a message
 socket.on('message', (message) => {
     console.log(message);
@@ -70,4 +75,12 @@ $shareLocationButton.addEventListener('click', () => {
             $shareLocationButton.removeAttribute('disabled');
         });
     });
+});
+
+// sending username and room to the server
+socket.emit('join', { username, room }, (error) => {
+    if (error) {
+        alert(error);
+        location.href = '/';
+    }
 });

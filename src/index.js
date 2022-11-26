@@ -3,6 +3,7 @@ const path = require('path');
 const socketio = require('socket.io');
 const http = require('http');
 const Filter = require('bad-words');
+const { addUser, removeUser, getUser, getUsers } = require('./utils/users');
 const {
     generateMessage,
     generateLocationMessage,
@@ -23,11 +24,28 @@ app.use(express.static(publicDirectoryPath));
 io.on('connection', (socket) => {
     console.log('New WebSocket connection');
 
-    // emitting Welcome! message for every user
-    socket.emit('message', generateMessage('Welcome!'));
+    socket.on('join', ({ username, room }, cb) => {
+        const { error, user } = addUser({
+            id: socket.id,
+            username,
+            room,
+        });
 
-    // every user joins the chat, A new user has joined! displayed, but not for the user who joined
-    socket.broadcast.emit('message', generateMessage('A new user has joined!'));
+        if (error) {
+            return cb(error);
+        }
+
+        socket.join(user.room);
+
+        // emitting Welcome! message for every user
+        socket.emit('message', generateMessage('Welcome!'));
+
+        // every user joins the chat, A new user has joined! displayed, but not for the user who joined
+        socket.broadcast
+            .to(user.room)
+            .emit('message', generateMessage(`${user.username} has joined.`));
+        cb();
+    });
 
     // emitting every message for all users
     socket.on('sendMessage', (message, cb) => {
@@ -41,7 +59,14 @@ io.on('connection', (socket) => {
 
     // every user leaves the chat, A user has left!
     socket.on('disconnect', () => {
-        io.emit('message', generateMessage('A user has left!'));
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit(
+                'message',
+                generateMessage(`${user.username} has left.`)
+            );
+        }
     });
 
     // every user shares his location

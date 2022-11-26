@@ -20,8 +20,8 @@ const { username, room } = Qs.parse(location.search, {
 
 // event listener for receiving a message
 socket.on('message', (message) => {
-    console.log(message);
     const html = Mustache.render(messageTemplate, {
+        username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a'),
     });
@@ -30,8 +30,8 @@ socket.on('message', (message) => {
 
 // event listener for receiving a location message
 socket.on('locationMessage', (message) => {
-    console.log(message);
     const html = Mustache.render(locationMessageTemplate, {
+        username: message.username,
         url: message.url,
         createdAt: moment(message.createdAt).format('h:mm a'),
     });
@@ -55,7 +55,6 @@ $messageForm.addEventListener('submit', (e) => {
         if (error) {
             return console.log(error);
         }
-        console.log('Message delivered.');
     });
 });
 
@@ -71,7 +70,6 @@ $shareLocationButton.addEventListener('click', () => {
             longitude: position.coords.longitude,
         };
         socket.emit('shareLocation', userLocation, () => {
-            console.log('Location shared.');
             $shareLocationButton.removeAttribute('disabled');
         });
     });
